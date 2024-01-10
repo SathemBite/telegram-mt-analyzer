@@ -62,13 +62,13 @@ async def analyze(name):
             break
 
         def additional_check(msg: types.MessageService):
-            ten_days_ago = today - timedelta(days=+50)
-            return True if (msg.date > ten_days_ago) else False
+            return True
+            # ten_days_ago = today - timedelta(days=+50)
+            # return True if (msg.date > ten_days_ago) else False
 
         start_time = time.perf_counter()
 
         for message in mt_messages:
-            msg_datetime = message.date
             msg_text = message.text
 
             if msg_text is not None and msg_text.startswith(mt_msg_start_text) and additional_check(message):
@@ -78,8 +78,7 @@ async def analyze(name):
 
                 for trade_text in non_empty_trades_text:
                     trade = TgTradeData.from_tg_trade_data_str(trade_text)
-                    if ('1.5' in trade.algorithm_name or '1.8' in trade.algorithm_name or '2.0'):
-                        trade_data_list.append(trade)
+                    trade_data_list.append(trade)
                     print(trade_text)
                     stats_len += 1
 
@@ -109,10 +108,9 @@ async def analyze(name):
 
     agg_result['weight'] = abs(agg_result['total_trades'] * agg_result['average_profit_percent'])
 
-    print('Stats len: {}'.format(agg_result))
+    # agg_result.to_csv('result.csv')
 
-    time.sleep(1000000)
-
+    print('The result has been saved in result.csv')
 
 if __name__ == '__main__':
     with(tg_client):
