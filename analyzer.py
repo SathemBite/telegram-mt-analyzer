@@ -33,7 +33,7 @@ conf = parse_conf(conf_file)
 tg_client = telegram_client(conf['default']['api_id'], conf['default']['api_hash'])
 
 
-async def analyze(name):
+async def analyze():
     # def filter_trades_result_msgs(msg: str):
 
     mt_stats_channel_id = int(conf['default']['mt_stats_channel_id'])
@@ -114,5 +114,5 @@ async def analyze(name):
 
 if __name__ == '__main__':
     with(tg_client):
-        tg_client.loop.run_until_complete(analyze('Anton'))
+        tg_client.loop.run_until_complete(analyze())
 
