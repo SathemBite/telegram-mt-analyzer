@@ -40,7 +40,7 @@ async def analyze():
     mt_stats_channel: types.Channel = await tg_client.get_entity(mt_stats_channel_id)
 
     offset = 0
-    message_limit = 100
+    message_limit = 1000
     mt_msg_start_text = conf['default']['mt_msg_start_text']
     stats_len = 0
     trade_data_list: list = []
