@@ -1,5 +1,3 @@
 telethon==1.30.*
 
-peewee==3.17.*
 pandas==2.1.*
-pyqt6==6.6.*
