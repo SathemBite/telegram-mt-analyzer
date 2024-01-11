@@ -11,10 +11,10 @@ import configparser
 from TgTradeData import TgTradeData
 from telethon.types import MessageService
 import pandas as pd
+import json
 
 
 # trade_result_msg_words = ["Loss", "Profit"]
-
 
 def parse_conf(conf_name: str):
     conf_parser = configparser.ConfigParser()
@@ -30,61 +30,68 @@ def telegram_client(api_id: str, api_hash: str) -> TelegramClient:
 
 conf_file = sys.argv[1] if len(sys.argv) == 2 else 'config.ini'
 conf = parse_conf(conf_file)
+
 tg_client = telegram_client(conf['default']['api_id'], conf['default']['api_hash'])
 
 
 async def analyze():
     # def filter_trades_result_msgs(msg: str):
 
-    mt_stats_channel_id = int(conf['default']['mt_stats_channel_id'])
-    mt_stats_channel: types.Channel = await tg_client.get_entity(mt_stats_channel_id)
+    mt_stats_channel_ids = json.loads(conf['default']['mt_stats_channel_ids'])
 
     offset = 0
-    message_limit = 1000
+    message_limit = 100
     mt_msg_start_text = conf['default']['mt_msg_start_text']
     stats_len = 0
     trade_data_list: list = []
 
     today: datetime = datetime.utcnow().replace(tzinfo=timezone.utc)
 
-    while True:
-        mt_messages: telethon.helpers.TotalList = await tg_client.get_messages(
-            mt_stats_channel,
-            offset_id=offset,
-            limit=message_limit,
-            reverse=True
-        )
+    for mt_stats_channel_id in mt_stats_channel_ids:
+        mt_stats_channel: types.Channel = await tg_client.get_entity(int(mt_stats_channel_id))
 
-        offset += message_limit
+        print(f'Started processing of the messages from \'{mt_stats_channel.title}\'...')
 
-        if len(mt_messages) == 0:
-            print('No messages found. The program is stopped')
-            break
+        offset = 0
+        while True:
+            mt_messages: telethon.helpers.TotalList = await tg_client.get_messages(
+                mt_stats_channel,
+                offset_id=offset,
+                limit=message_limit,
+                reverse=True
+            )
 
-        def additional_check(msg: types.MessageService):
-            return True
-            # ten_days_ago = today - timedelta(days=+50)
-            # return True if (msg.date > ten_days_ago) else False
+            offset += message_limit
 
-        start_time = time.perf_counter()
+            if len(mt_messages) == 0:
+                print(f'Processing of the messages from \'{mt_stats_channel.title}\' is finished.')
+                break
 
-        for message in mt_messages:
-            msg_text = message.text
+            def additional_check(msg: types.MessageService):
+                return True
+                # ten_days_ago = today - timedelta(days=+50)
+                # return True if (msg.date > ten_days_ago) else False
 
-            if msg_text is not None and msg_text.startswith(mt_msg_start_text) and additional_check(message):
-                trades_text = msg_text.split('\n')
-                non_empty_trades_text = list(
-                    filter(lambda text: text != '' and ('Profit' in text or 'Loss' in text), trades_text))
+            start_time = time.perf_counter()
 
-                for trade_text in non_empty_trades_text:
-                    trade = TgTradeData.from_tg_trade_data_str(trade_text)
-                    trade_data_list.append(trade)
-                    print(trade_text)
-                    stats_len += 1
+            for message in mt_messages:
+                msg_text = message.text
 
-        end_time = time.perf_counter()
+                if msg_text is not None and msg_text.startswith(mt_msg_start_text) and additional_check(message):
+                    trades_text = msg_text.split('\n')
+                    non_empty_trades_text = list(
+                        filter(lambda text: text != '' and ('Profit' in text or 'Loss' in text), trades_text))
 
-        print(f'Total time: {end_time - start_time}')
+                    for trade_text in non_empty_trades_text:
+                        trade = TgTradeData.from_tg_trade_data_str(trade_text)
+                        trade_data_list.append(trade)
+                        print(trade_text)
+                        stats_len += 1
+
+            end_time = time.perf_counter()
+
+            print(f'Processed {offset} messages from \'{mt_stats_channel.title}\'. Total time: {end_time - start_time}')
+
 
     trades_df = pd.DataFrame([vars(trade) for trade in trade_data_list])
 
