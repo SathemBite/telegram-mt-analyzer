@@ -29,7 +29,8 @@ def telegram_client(api_id: str, api_hash: str) -> TelegramClient:
     return client
 
 
-conf_file = sys.argv[1] if len(sys.argv) == 2 else 'config.ini'
+conf_file = 'config.ini'
+stats_for_days_num = int(sys.argv[1]) if len(sys.argv) == 2 else 1000
 conf = parse_conf(conf_file)
 
 tg_client = telegram_client(conf['default']['api_id'], conf['default']['api_hash'])
@@ -72,9 +73,8 @@ async def analyze():
                 break
 
             def additional_check(msg: types.MessageService):
-                return True
-                # ten_days_ago = today - timedelta(days=+50)
-                # return True if (msg.date > ten_days_ago) else False
+                ten_days_ago = today - timedelta(days=+stats_for_days_num)
+                return True if (msg.date > ten_days_ago) else False
 
             for message in mt_messages:
                 msg_text = message.text
@@ -119,7 +119,7 @@ async def analyze():
 
     agg_result.to_csv('result.csv')
 
-    print('The result has been saved in result.csv')
+    print(f'The result(for the last {stats_for_days_num} days) has been saved in result.csv')
 
 
 if __name__ == '__main__':
