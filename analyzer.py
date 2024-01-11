@@ -117,7 +117,7 @@ async def analyze():
 
     agg_result['weight'] = abs(agg_result['total_trades'] * agg_result['average_profit_percent'])
 
-    # agg_result.to_csv('result.csv')
+    agg_result.to_csv('result.csv')
 
     print('The result has been saved in result.csv')
 
