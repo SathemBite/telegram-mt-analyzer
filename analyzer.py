@@ -47,6 +47,8 @@ async def analyze():
 
     today: datetime = datetime.utcnow().replace(tzinfo=timezone.utc)
 
+    start_time = time.perf_counter()
+
     for mt_stats_channel_id in mt_stats_channel_ids:
         mt_stats_channel: types.Channel = await tg_client.get_entity(int(mt_stats_channel_id))
 
@@ -54,6 +56,7 @@ async def analyze():
 
         offset = 0
         while True:
+
             mt_messages: telethon.helpers.TotalList = await tg_client.get_messages(
                 mt_stats_channel,
                 offset_id=offset,
@@ -72,7 +75,6 @@ async def analyze():
                 # ten_days_ago = today - timedelta(days=+50)
                 # return True if (msg.date > ten_days_ago) else False
 
-            start_time = time.perf_counter()
 
             for message in mt_messages:
                 msg_text = message.text
