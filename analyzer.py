@@ -24,7 +24,8 @@ def parse_conf(conf_name: str):
 
 # noinspection PyTypeChecker
 def telegram_client(api_id: str, api_hash: str) -> TelegramClient:
-    client = TelegramClient('bot', conf['default']['api_id'], conf['default']['api_hash']).start()
+    client = TelegramClient('bot', conf['default']['api_id'], conf['default']['api_hash'],
+                            system_version="4.16.30-vxCUSTOM").start()
     return client
 
 
@@ -75,7 +76,6 @@ async def analyze():
                 # ten_days_ago = today - timedelta(days=+50)
                 # return True if (msg.date > ten_days_ago) else False
 
-
             for message in mt_messages:
                 msg_text = message.text
 
@@ -93,7 +93,6 @@ async def analyze():
             end_time = time.perf_counter()
 
             print(f'Processed {offset} messages from \'{mt_stats_channel.title}\'. Total time: {end_time - start_time}')
-
 
     trades_df = pd.DataFrame([vars(trade) for trade in trade_data_list])
 
@@ -113,7 +112,8 @@ async def analyze():
         'is_loss': 'sum'
     })
 
-    agg_result = agg_result.rename(columns={'result_usdt': 'total_profit', 'ticker': 'total_trades', 'result_percent': 'average_profit_percent'})
+    agg_result = agg_result.rename(
+        columns={'result_usdt': 'total_profit', 'ticker': 'total_trades', 'result_percent': 'average_profit_percent'})
 
     agg_result['weight'] = abs(agg_result['total_trades'] * agg_result['average_profit_percent'])
 
@@ -121,7 +121,7 @@ async def analyze():
 
     print('The result has been saved in result.csv')
 
+
 if __name__ == '__main__':
     with(tg_client):
         tg_client.loop.run_until_complete(analyze())
-
